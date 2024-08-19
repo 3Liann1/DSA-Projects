@@ -1,103 +1,145 @@
-import math
-import random
+#include <iostream>
+#include <vector>
+#include <limits>
 
-def print_board(board):
-    print("\n")
-    print(f" {board[0]} | {board[1]} | {board[2]}")
-    print("---|---|---")
-    print(f" {board[3]} | {board[4]} | {board[5]}")
-    print("---|---|---")
-    print(f" {board[6]} | {board[7]} | {board[8]}")
-    print("\n")
+using namespace std;
 
-def check_win(board, player):
-    win_conditions = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
-        [0, 4, 8], [2, 4, 6]               # Diagonals
-    ]
-    for condition in win_conditions:
-        if all(board[i] == player for i in condition):
-            return True
-    return False
+const int PLAYER_X = 1;
+const int PLAYER_O = -1;
+const int EMPTY = 0;
 
-def check_draw(board):
-    return all(cell in ['X', 'O'] for cell in board)
+// Function to print the Tic-Tac-Toe board
+void printBoard(const vector<int>& board) {
+    for (int i = 0; i < 9; ++i) {
+        if (board[i] == PLAYER_X) cout << " X ";
+        else if (board[i] == PLAYER_O) cout << " O ";
+        else cout << " . ";
 
-def minimax(board, depth, is_maximizing):
-    scores = {'X': 1, 'O': -1, 'draw': 0}
-    if check_win(board, 'X'):
-        return scores['X']
-    if check_win(board, 'O'):
-        return scores['O']
-    if check_draw(board):
-        return scores['draw']
+        if (i % 3 < 2) cout << "|";
+        else cout << endl;
 
-    if is_maximizing:
-        best_score = -math.inf
-        for i in range(9):
-            if board[i] == ' ':
-                board[i] = 'X'
-                score = minimax(board, depth + 1, False)
-                board[i] = ' '
-                best_score = max(score, best_score)
-        return best_score
-    else:
-        best_score = math.inf
-        for i in range(9):
-            if board[i] == ' ':
-                board[i] = 'O'
-                score = minimax(board, depth + 1, True)
-                board[i] = ' '
-                best_score = min(score, best_score)
-        return best_score
+        if (i % 3 == 2 && i < 6) cout << "---|---|---" << endl;
+    }
+    cout << endl;
+}
 
-def best_move(board):
-    best_score = -math.inf
-    move = -1
-    for i in range(9):
-        if board[i] == ' ':
-            board[i] = 'X'
-            score = minimax(board, 0, False)
-            board[i] = ' '
-            if score > best_score:
-                best_score = score
-                move = i
-    return move
+// Check if there is a win on the board
+int checkWin(const vector<int>& board) {
+    const int winConditions[8][3] = {
+        {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Rows
+        {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Columns
+        {0, 4, 8}, {2, 4, 6}              // Diagonals
+    };
 
-def tic_tac_toe():
-    board = [' ' for _ in range(9)]
-    current_player = 'O'  # 'O' starts first
-    game_over = False
+    for (const auto& condition : winConditions) {
+        if (board[condition[0]] != EMPTY &&
+            board[condition[0]] == board[condition[1]] &&
+            board[condition[1]] == board[condition[2]]) {
+            return board[condition[0]];
+        }
+    }
 
-    while not game_over:
-        print_board(board)
+    return EMPTY;
+}
 
-        if current_player == 'X':
-            move = best_move(board)
-            board[move] = 'X'
-        else:
-            move = int(input("Player O, enter your move (1-9): ")) - 1
-            if board[move] == ' ':
-                board[move] = 'O'
-            else:
-                print("Invalid move. Try again.")
-                continue
+// Check if the board is full
+bool isBoardFull(const vector<int>& board) {
+    for (int i = 0; i < 9; ++i) {
+        if (board[i] == EMPTY) return false;
+    }
+    return true;
+}
 
-        if check_win(board, 'X'):
-            print_board(board)
-            print("Player X wins!")
-            game_over = True
-        elif check_win(board, 'O'):
-            print_board(board)
-            print("Player O wins!")
-            game_over = True
-        elif check_draw(board):
-            print_board(board)
-            print("It's a draw!")
-            game_over = True
+// Minimax algorithm to find the best move
+int minimax(vector<int>& board, int depth, bool isMaximizing) {
+    int winner = checkWin(board);
+    if (winner == PLAYER_X) return 10 - depth;
+    if (winner == PLAYER_O) return depth - 10;
+    if (isBoardFull(board)) return 0;
 
-        current_player = 'X' if current_player == 'O' else 'O'
+    if (isMaximizing) {
+        int bestScore = numeric_limits<int>::min();
+        for (int i = 0; i < 9; ++i) {
+            if (board[i] == EMPTY) {
+                board[i] = PLAYER_X;
+                int score = minimax(board, depth + 1, false);
+                board[i] = EMPTY;
+                bestScore = max(score, bestScore);
+            }
+        }
+        return bestScore;
+    } else {
+        int bestScore = numeric_limits<int>::max();
+        for (int i = 0; i < 9; ++i) {
+            if (board[i] == EMPTY) {
+                board[i] = PLAYER_O;
+                int score = minimax(board, depth + 1, true);
+                board[i] = EMPTY;
+                bestScore = min(score, bestScore);
+            }
+        }
+        return bestScore;
+    }
+}
 
-if __name__ == "__main__":
-    tic_tac_toe()
+// Find the best move for the AI
+int findBestMove(vector<int>& board) {
+    int bestMove = -1;
+    int bestScore = numeric_limits<int>::min();
+
+    for (int i = 0; i < 9; ++i) {
+        if (board[i] == EMPTY) {
+            board[i] = PLAYER_X;
+            int moveScore = minimax(board, 0, false);
+            board[i] = EMPTY;
+
+            if (moveScore > bestScore) {
+                bestScore = moveScore;
+                bestMove = i;
+            }
+        }
+    }
+    return bestMove;
+}
+
+// Main function to run the Tic-Tac-Toe game
+int main() {
+    vector<int> board(9, EMPTY);
+    bool isXTurn = true;
+    int move;
+
+    while (true) {
+        printBoard(board);
+
+        if (isXTurn) {
+            cout << "Player X's turn (Enter position 1-9): ";
+            cin >> move;
+            --move;  // Convert to 0-based index
+            if (move < 0 || move >= 9 || board[move] != EMPTY) {
+                cout << "Invalid move. Try again." << endl;
+                continue;
+            }
+            board[move] = PLAYER_X;
+        } else {
+            move = findBestMove(board);
+            board[move] = PLAYER_O;
+            cout << "Player O (AI) chose position " << move + 1 << endl;
+        }
+
+        int winner = checkWin(board);
+        if (winner != EMPTY) {
+            printBoard(board);
+            if (winner == PLAYER_X) cout << "Player X wins!" << endl;
+            else cout << "Player O wins!" << endl;
+            break;
+        } else if (isBoardFull(board)) {
+            printBoard(board);
+            cout << "It's a draw!" << endl;
+            break;
+        }
+
+        isXTurn = !isXTurn;  // Switch turns
+    }
+
+    return 0;
+}
