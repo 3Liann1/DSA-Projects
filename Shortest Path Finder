@@ -1,0 +1,69 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+
+using namespace std;
+
+const int INF = INT_MAX;
+
+void dijkstra(const vector<vector<pair<int, int>>>& graph, int start) {
+    int n = graph.size();
+    vector<int> dist(n, INF);
+    vector<int> parent(n, -1);
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
+
+    dist[start] = 0;
+    pq.push({0, start});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+
+        for (const auto& edge : graph[u]) {
+            int v = edge.first;
+            int weight = edge.second;
+
+            if (dist[u] + weight < dist[v]) {
+                dist[v] = dist[u] + weight;
+                parent[v] = u;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+
+    cout << "Vertex\tDistance from Source\tPath\n";
+    for (int i = 0; i < n; ++i) {
+        cout << i << "\t" << (dist[i] == INF ? "INF" : to_string(dist[i])) << "\t\t";
+        if (dist[i] != INF) {
+            int v = i;
+            while (parent[v] != -1) {
+                cout << v << " <- ";
+                v = parent[v];
+            }
+            cout << start;
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    int n = 5; // Number of nodes
+    vector<vector<pair<int, int>>> graph(n);
+
+    // Graph edges (u, v, weight)
+    graph[0].emplace_back(1, 10);
+    graph[0].emplace_back(4, 3);
+    graph[1].emplace_back(2, 2);
+    graph[1].emplace_back(4, 4);
+    graph[2].emplace_back(3, 9);
+    graph[3].emplace_back(2, 7);
+    graph[4].emplace_back(1, 1);
+    graph[4].emplace_back(2, 8);
+    graph[4].emplace_back(3, 2);
+
+    int start = 0;
+    dijkstra(graph, start);
+
+    return 0;
+}
