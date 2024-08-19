@@ -1,0 +1,68 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+
+using namespace std;
+
+// Function to print transactions
+void printTransactions(const vector<pair<int, int>>& transactions) {
+    for (const auto& transaction : transactions) {
+        cout << "Person " << transaction.first << " pays Person " << transaction.second << endl;
+    }
+}
+
+// Function to settle debts optimally
+void settleDebts(vector<int>& balance) {
+    vector<pair<int, int>> transactions;
+
+    // Sorting people based on balance
+    vector<int> creditors, debtors;
+    for (int i = 0; i < balance.size(); ++i) {
+        if (balance[i] > 0) creditors.push_back(i);
+        else if (balance[i] < 0) debtors.push_back(i);
+    }
+
+    // Settle debts
+    while (!creditors.empty() && !debtors.empty()) {
+        int creditor = creditors.back();
+        int debtor = debtors.back();
+        int amount = min(balance[creditor], -balance[debtor]);
+
+        transactions.push_back({debtor, creditor});
+        balance[creditor] -= amount;
+        balance[debtor] += amount;
+
+        if (balance[creditor] == 0) creditors.pop_back();
+        if (balance[debtor] == 0) debtors.pop_back();
+    }
+
+    printTransactions(transactions);
+}
+
+int main() {
+    int n;
+
+    cout << "Enter the number of people: ";
+    cin >> n;
+
+    vector<int> balance(n, 0);
+    
+    cout << "Enter the transactions (debtor creditor amount). Type 'end' to stop:" << endl;
+    while (true) {
+        string input;
+        cin >> input;
+        if (input == "end") break;
+
+        int debtor, creditor, amount;
+        debtor = stoi(input);
+        cin >> creditor >> amount;
+
+        balance[debtor] -= amount;
+        balance[creditor] += amount;
+    }
+
+    settleDebts(balance);
+
+    return 0;
+}
